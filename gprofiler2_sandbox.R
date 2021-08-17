@@ -51,10 +51,11 @@ david3new <- (function(){
 # save the detlist filepaths
 detlists <-list.files(path = "C:/Users/jstelman/Git/ww2dw/DET_lists",full.names = T)
 
-
-# this works
-plots <- list()
-# this mostly works :/
+# prepare pdf file
+pdf(file = "plots/gprofilerPlots.pdf")
+# save names so we know which ones didn't fail
+plotnames <- list()
+# make them and print them in pdf, also save them to global env
 for (x in detlists){
   detname <- str_sub(x,43,-5)
   dlist <- read.table(file=x, sep = "\t", quote = "\"", header = T)
@@ -73,20 +74,46 @@ for (x in detlists){
                       numeric_ns = "", 
                       sources = c("GO:BP","GO:MF","KEGG","REAC"), # just the 4
                       as_short_link = FALSE)
-  plots[detname] <- gostplot(gostreslist, capped = FALSE, interactive = FALSE) + ggtitle(detname)
+  assign(x = detname,
+         value = gostplot(gostreslist, capped = TRUE, interactive = FALSE) + ggtitle(detname) +
+           theme(plot.title = element_text(size = 30, hjust = 0.5, margin = margin(10,0,-10,0))),
+         envir = globalenv())
+  plotnames[detname] <- detname
+  print(get(detname, envir = globalenv()))
 }
+#close pdf connection
+dev.off()
 
-# this doesn't do what it should
-# use cowplot's plot_grid to arrange all 5 plots and the legend
-gprofiler3x5plot <- plot_grid(plotlist = plots, 
-                         nrow = 3, labels = LETTERS[1:15],
-                         label_y = 0.85, label_x = 0.85) 
+# make the legend
+gp2legend <- as.data.frame(cbind(
+  values = NA, colors = c("GO:MF", "GO:BP", "KEGG", "REAC"))) %>% 
+  mutate(colors = relevel(as.factor(colors), "GO:MF")) %>% 
+  ggplot(aes(values, fill = colors)) + geom_bar() + 
+  scale_fill_manual(values = c("#DC3912","#FF9900","#DD4477","#3366CC")) + 
+  theme(axis.title = element_blank(), legend.title = element_blank(),
+        axis.text = element_blank(), axis.ticks = element_blank(),
+        panel.background = element_rect(fill = "white"), panel.ontop = T,
+        legend.justification = "center", legend.position = c(0.5,0.5),
+        legend.text = element_text(size = 20, margin = margin(6,6,6,6)),
+        legend.key.size = unit(1, 'cm'))
 
-# this is a sad result
+# use cowplot's plot_grid to arrange all 14 successful plots and the legend in place of the 15th
+gprofiler5x3plot <- plot_grid(ctrlvefp1, ctrlvefp2, ctrlvefp3, ctrlvefp4, ctrlvefp_field,
+                              ctrlvup1, ctrlvup2, ctrlvup3, ctrlvup4, ctrlvup_field,
+                              upvefp1, upvefp2, upvefp3, 
+                              gp2legend,
+                              # ggplot()+geom_blank()+theme_nothing(), 
+                              upvefp_field,
+                         nrow = 5, labels = LETTERS[1:15], byrow = FALSE,
+                         label_y = 0.95, label_x = 0.95) +
+  theme(plot.margin = margin(0,0,0,40)) +
+  draw_label(x = -0.01, angle = 90, label = "-log10(p-adj)", size = 30,)
+
+
 # export it to a file
-png(filename = file.path(goplot_root, "plots", "3x5gprofiler.png"),
-    width = 1666, height = 1080, units = "px", bg = "white")
-print(gprofiler3x5plot)
+png(filename = file.path(goplot_root, "plots", "5x3gprofiler.png"),
+    width = 2240, height = 2200, units = "px", bg = "white")
+print(gprofiler5x3plot)
 dev.off()
 
 
@@ -97,7 +124,6 @@ links <-
       dl <- read.table(file=b, sep = "\t", quote = "\"", header = T)
       return(unique(drop_na(dl)$hs_gene))
       })
-    #dlist <- read.table(file=x, sep = "\t", quote = "\"", header = T)
     gostreslist <- gost(query = dlists,
                         organism = "hsapiens", 
                         ordered_query = FALSE, 
