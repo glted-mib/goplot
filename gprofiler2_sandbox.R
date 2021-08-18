@@ -53,6 +53,7 @@ detlists <-list.files(path = "C:/Users/jstelman/Git/ww2dw/DET_lists",full.names 
 
 # prepare pdf file
 pdf(file = "plots/gprofilerPlots.pdf")
+# pdf(file = "plots/gprofilerPlotskegg.pdf")
 # save names so we know which ones didn't fail
 plotnames <- list()
 # make them and print them in pdf, also save them to global env
@@ -73,6 +74,7 @@ for (x in detlists){
                       custom_bg = NULL, 
                       numeric_ns = "", 
                       sources = c("GO:BP","GO:MF","KEGG","REAC"), # just the 4
+                      # sources = c("KEGG"), # just the 1
                       as_short_link = FALSE)
   if(!is.null(gostresx)){
     assign(x = detname,
@@ -124,6 +126,7 @@ gprofiler5x3plot <- plot_grid(ctrlvefp1, ctrlvefp2, ctrlvefp3, ctrlvefp4, ctrlve
 
 # export it to a file
 png(filename = file.path(goplot_root, "plots", "5x3gprofiler.png"),
+# png(filename = file.path(goplot_root, "plots", "5x3gprofilerkegg.png"),
     width = 2240, height = 2250, units = "px", bg = "white")
 print(gprofiler5x3plot)
 dev.off()
@@ -153,3 +156,5 @@ links <-
                         as_short_link = TRUE)
   return(gostreslist)
   })
+
+

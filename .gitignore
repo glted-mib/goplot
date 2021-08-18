@@ -40,3 +40,9 @@ vignettes/*.pdf
 
 # personal use files
 david3.xlsx
+
+# methods we have retired
+retired_methods/
+
+# study guides
+study_guides/
