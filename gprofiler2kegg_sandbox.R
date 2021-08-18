@@ -23,20 +23,22 @@ library(pheatmap)
 # save the detlist filepaths
 detlists <-list.files(path = "C:/Users/jstelman/Git/ww2dw/DET_lists",full.names = T)
 
+# change the names of th
+
 for (x in detlists[1:1]){
   detname <- str_sub(x, 43, -5)
   dlist <- read.table(file=x, sep = "\t", quote = "\"", header = T) %>% 
     dplyr::filter(sign(des.log2FoldChange) == sign(edg.logFC)) %>% 
     transmute(transcriptID, avg.rank, direction = sign(edg.logFC), gene, hs_gene, name) %>%
-    drop_na() %>%
+    drop_na() %>% # do the uniquing before moving on, (take the row w/ least avg.rank)
     arrange(avg.rank)
   uplist <- dlist %>% dplyr::filter(direction == 1)
   downlist <- dlist %>% dplyr::filter(direction == -1)
-  multi_gp2 <- gost(query = list(upregulated = unique(uplist$hs_gene),
+  multi_gp2 <- gost(query = list(upregulated = unique(uplist$hs_gene), # now u don't need unique
                                  downregulated = unique(downlist$hs_gene)),
-                    ordered_query = FALSE, 
+                    ordered_query = TRUE, 
                     multi_query = FALSE, 
-                    user_threshold = 0.01, 
+                    user_threshold = 0.05, 
                     sources = c("KEGG"))
   if (!is.null(multi_gp2)){
     # make heatmap table
@@ -59,7 +61,7 @@ for (x in detlists[-1]){
                                 downregulated = unique(downlist$hs_gene)),
                    ordered_query = TRUE, 
                    multi_query = FALSE, 
-                   user_threshold = 0.01, 
+                   user_threshold = 0.05, 
                    sources = c("KEGG"), # just the 1
  )
  if (!is.null(multi_gp2)){
@@ -76,16 +78,17 @@ for (x in detlists[-1]){
 # fix that first column's name
 colnames(fullhmtab)[3] <- "hmval.ctrlvefp_field"
 
+
 # replace nas with 0s
 fullhmtab <- fullhmtab %>% mutate_all(replace_na,0)
 
 # make the table with the kegg ids as rownames and make heatmap
-fullhmtab2 <- fullhmtab %>% group_by(term_id, term_name) %>% summarize_all(mean)
+fullhmtab2 <- fullhmtab %>% group_by(term_id, term_name) %>% summarize_all(mean) # this can go
 fullhmtab2 <- column_to_rownames(fullhmtab2, var = "term_id")
 png(filename = file.path(goplot_root, "plots", "keggheatmapIDs.png"),
     width = 670, height = 1940, units = "px", bg = "white")
     # width = 560, height = 1615, units = "px", bg = "white")
-pheatmap(fullhmtab2[,2:14],
+pheatmap(fullhmtab2[,-1],
          # cluster_rows=F,
          # cluster_cols = F,
          main = "Kegg pathways",
@@ -98,7 +101,7 @@ fullhmtab3 <- column_to_rownames(fullhmtab3, var = "term_name")
 png(filename = file.path(goplot_root, "plots", "keggheatmapDETAILs.png"),
     width = 800, height = 1940, units = "px", bg = "white")
     # width = 560, height = 1615, units = "px", bg = "white")
-pheatmap(fullhmtab3[,2:14],
+pheatmap(fullhmtab3[,-1],
          # cluster_rows=F,
          # cluster_cols = F,
          main = "Kegg pathways details",
