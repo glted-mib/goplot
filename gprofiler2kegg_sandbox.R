@@ -72,31 +72,37 @@ for (x in detlists[-1]){
  }
 }
 
+
 # fix that first column's name
 colnames(fullhmtab)[3] <- "hmval.ctrlvefp_field"
+
+# replace nas with 0s
+fullhmtab <- fullhmtab %>% mutate_all(replace_na,0)
 
 # make the table with the kegg ids as rownames and make heatmap
 fullhmtab2 <- fullhmtab %>% group_by(term_id, term_name) %>% summarize_all(mean)
 fullhmtab2 <- column_to_rownames(fullhmtab2, var = "term_id")
 png(filename = file.path(goplot_root, "plots", "keggheatmapIDs.png"),
-    # width = 1940, height = 670, units = "px", bg = "white")
-    width = 1615, height = 560, units = "px", bg = "white")
-pheatmap(t(fullhmtab2[,2:14]),
-         cluster_rows=F,
-         cluster_cols = F,
-         main = "Kegg pathways")
+    width = 670, height = 1940, units = "px", bg = "white")
+    # width = 560, height = 1615, units = "px", bg = "white")
+pheatmap(fullhmtab2[,2:14],
+         # cluster_rows=F,
+         # cluster_cols = F,
+         main = "Kegg pathways",
+         cex = 1.3)
 dev.off()
 
 # make the table with term names as rownames and make heatmap
 fullhmtab3 <- fullhmtab %>% group_by(term_name, term_id) %>% summarize_all(mean)
 fullhmtab3 <- column_to_rownames(fullhmtab3, var = "term_name")
 png(filename = file.path(goplot_root, "plots", "keggheatmapDETAILs.png"),
-    # width = 1940, height = 670, units = "px", bg = "white")
-    width = 1615, height = 560, units = "px", bg = "white")
-pheatmap(t(fullhmtab3[,2:14]),
-         cluster_rows=F,
-         cluster_cols = F,
-         main = "Kegg pathways details")
+    width = 800, height = 1940, units = "px", bg = "white")
+    # width = 560, height = 1615, units = "px", bg = "white")
+pheatmap(fullhmtab3[,2:14],
+         # cluster_rows=F,
+         # cluster_cols = F,
+         main = "Kegg pathways details",
+         cex = 1.3)
 dev.off()
 
 
